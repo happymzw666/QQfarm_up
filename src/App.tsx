@@ -193,29 +193,29 @@ export default function App() {
           </div>
         )}
 
-        <div className="bg-[#f7f0e4] rounded-3xl p-6 shadow-[6px_6px_14px_rgba(163,141,109,0.4),-4px_-4px_10px_rgba(250,243,230,0.65)]">
+        <div className="bg-[#f7f0e4] rounded-3xl p-4 md:p-6 shadow-[6px_6px_14px_rgba(163,141,109,0.4),-4px_-4px_10px_rgba(250,243,230,0.65)]">
           <h2 className="text-xl font-bold mb-6">🏆 经验排行榜 (Top 20)</h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[400px]">
               <thead>
-                <tr className="bg-orange-500 text-white">
-                  <th className="p-3 rounded-tl-xl">排名</th>
-                  <th className="p-3">作物</th>
-                  <th className="p-3">等级</th>
-                  <th className="p-3">生长时间</th>
-                  <th className="p-3 rounded-tr-xl">每小时经验</th>
+                <tr className="bg-orange-500 text-white text-sm md:text-base">
+                  <th className="p-2 md:p-3 rounded-tl-xl whitespace-nowrap">排名</th>
+                  <th className="p-2 md:p-3 whitespace-nowrap">作物</th>
+                  <th className="p-2 md:p-3 whitespace-nowrap">等级</th>
+                  <th className="p-2 md:p-3 whitespace-nowrap">生长时间</th>
+                  <th className="p-2 md:p-3 rounded-tr-xl whitespace-nowrap">每小时经验</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="text-sm md:text-base">
                 {(useFert ? sortedFert : sortedNoFert).slice(0, 20).map((row, i) => (
                   <tr key={row.seedId} className="border-b border-orange-200/50 hover:bg-green-500/10 transition-colors">
-                    <td className="p-3 font-bold">
+                    <td className="p-2 md:p-3 font-bold whitespace-nowrap">
                       {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
                     </td>
-                    <td className="p-3 font-bold">{row.name}</td>
-                    <td className="p-3 text-gray-600">Lv {row.requiredLevel}</td>
-                    <td className="p-3 text-gray-600">{useFert ? row.growTimeFertStr : row.growTimeStr}</td>
-                    <td className="p-3 font-bold text-green-700">
+                    <td className="p-2 md:p-3 font-bold whitespace-nowrap">{row.name}</td>
+                    <td className="p-2 md:p-3 text-gray-600 whitespace-nowrap">Lv {row.requiredLevel}</td>
+                    <td className="p-2 md:p-3 text-gray-600 whitespace-nowrap">{useFert ? row.growTimeFertStr : row.growTimeStr}</td>
+                    <td className="p-2 md:p-3 font-bold text-green-700 whitespace-nowrap">
                       {(useFert ? row.expPerHourFert : row.expPerHourNoFert).toFixed(2)}
                     </td>
                   </tr>
