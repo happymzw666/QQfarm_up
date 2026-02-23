@@ -21,12 +21,14 @@ function parseGrowPhases(growPhases: string) {
 }
 
 const plantPhaseMap: Record<number, number> = {};
+const plantLastPhaseMap: Record<number, number> = {};
 for (const p of plantData) {
   const seedId = Number(p.seed_id);
   if (seedId > 0 && !plantPhaseMap[seedId]) {
     const phases = parseGrowPhases(p.grow_phases);
     if (phases.length > 0) {
       plantPhaseMap[seedId] = phases[0];
+      plantLastPhaseMap[seedId] = phases[phases.length - 1];
     }
   }
 }
@@ -60,22 +62,32 @@ export default function App() {
       const seedId = s.seedId;
       const growTimeSec = s.growTimeSec;
       const reduceSec = plantPhaseMap[seedId] || 0;
-      const growTimeFert = Math.max(1, growTimeSec - reduceSec);
+      const seasons = s.seasons || 1;
+      const lastPhaseSec = plantLastPhaseMap[seedId] || 0;
+      
+      const totalGrowTimeSec = growTimeSec + (seasons - 1) * lastPhaseSec;
+      const totalGrowTimeFert = Math.max(1, growTimeSec - reduceSec) + (seasons - 1) * lastPhaseSec;
 
-      const cycleNoFert = growTimeSec + plantSecNoFert;
-      const cycleFert = growTimeFert + plantSecFert;
+      const cycleNoFert = totalGrowTimeSec + plantSecNoFert;
+      const cycleFert = totalGrowTimeFert + plantSecFert;
 
-      const expPerHourNoFert = (currentLands * s.exp / cycleNoFert) * 3600;
-      const expPerHourFert = (currentLands * s.exp / cycleFert) * 3600;
+      const totalExp = s.exp * seasons;
+
+      const expPerHourNoFert = (currentLands * totalExp / cycleNoFert) * 3600;
+      const expPerHourFert = (currentLands * totalExp / cycleFert) * 3600;
       
       const gainPercent = expPerHourNoFert > 0
         ? ((expPerHourFert - expPerHourNoFert) / expPerHourNoFert) * 100
         : 0;
 
+      const totalGrowTimeStr = seasons > 1 ? `${formatSec(totalGrowTimeSec)} (共${seasons}季)` : s.growTimeStr;
+      const totalGrowTimeFertStr = seasons > 1 ? `${formatSec(totalGrowTimeFert)} (共${seasons}季)` : formatSec(totalGrowTimeFert);
+
       rows.push({
         ...s,
-        growTimeFert,
-        growTimeFertStr: formatSec(growTimeFert),
+        growTimeFert: totalGrowTimeFert,
+        growTimeFertStr: totalGrowTimeFertStr,
+        growTimeStr: totalGrowTimeStr,
         expPerHourNoFert,
         expPerHourFert,
         expPerDayNoFert: expPerHourNoFert * 24,
@@ -156,11 +168,11 @@ export default function App() {
                   <div className="text-xs text-gray-500 mb-1">每日经验</div>
                   <div className="font-bold text-lg">{Math.round(bestNo?.expPerDayNoFert || 0).toLocaleString()}</div>
                 </div>
-                <div className="bg-white/50 p-3 rounded-xl shadow-sm">
+                <div className="bg-white/50 p-3 rounded-xl shadow-sm flex flex-col justify-center">
                   <div className="text-xs text-gray-500 mb-1">生长时间</div>
-                  <div className="font-bold text-lg">{bestNo?.growTimeStr}</div>
+                  <div className="font-bold text-base leading-tight break-words">{bestNo?.growTimeStr}</div>
                 </div>
-                <div className="bg-white/50 p-3 rounded-xl shadow-sm">
+                <div className="bg-white/50 p-3 rounded-xl shadow-sm flex flex-col justify-center">
                   <div className="text-xs text-gray-500 mb-1">需要等级</div>
                   <div className="font-bold text-lg">Lv {bestNo?.requiredLevel}</div>
                 </div>
@@ -181,11 +193,11 @@ export default function App() {
                     <div className="text-xs text-gray-500 mb-1">每日经验</div>
                     <div className="font-bold text-lg">{Math.round(bestFert?.expPerDayFert || 0).toLocaleString()}</div>
                   </div>
-                  <div className="bg-white/50 p-3 rounded-xl shadow-sm">
+                  <div className="bg-white/50 p-3 rounded-xl shadow-sm flex flex-col justify-center">
                     <div className="text-xs text-gray-500 mb-1">肥后生长</div>
-                    <div className="font-bold text-lg">{bestFert?.growTimeFertStr}</div>
+                    <div className="font-bold text-base leading-tight break-words">{bestFert?.growTimeFertStr}</div>
                   </div>
-                  <div className="bg-white/50 p-3 rounded-xl shadow-sm">
+                  <div className="bg-white/50 p-3 rounded-xl shadow-sm flex flex-col justify-center">
                     <div className="text-xs text-gray-500 mb-1">提升比例</div>
                     <div className="font-bold text-lg text-green-600">+{bestFert?.gainPercent.toFixed(2)}%</div>
                   </div>
@@ -216,7 +228,7 @@ export default function App() {
                     </td>
                     <td className="p-2 md:p-3 font-bold whitespace-nowrap">{row.name}</td>
                     <td className="p-2 md:p-3 text-gray-600 whitespace-nowrap">Lv {row.requiredLevel}</td>
-                    <td className="p-2 md:p-3 text-gray-600 whitespace-nowrap">{useFert ? row.growTimeFertStr : row.growTimeStr}</td>
+                    <td className="p-2 md:p-3 text-gray-600 text-sm md:text-base">{useFert ? row.growTimeFertStr : row.growTimeStr}</td>
                     <td className="p-2 md:p-3 font-bold text-green-700 whitespace-nowrap">
                       {(useFert ? row.expPerHourFert : row.expPerHourNoFert).toFixed(2)}
                     </td>
