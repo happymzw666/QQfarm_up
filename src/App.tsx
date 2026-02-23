@@ -43,17 +43,19 @@ function formatSec(sec: number) {
 }
 
 export default function App() {
-  const [level, setLevel] = useState(27);
-  const [lands, setLands] = useState(18);
+  const [level, setLevel] = useState<number | ''>(27);
+  const [lands, setLands] = useState<number | ''>(18);
   const [useFert, setUseFert] = useState(true);
 
   const calculatedRows = useMemo(() => {
-    const plantSecNoFert = lands / NO_FERT_PLANT_SPEED;
-    const plantSecFert = lands / NORMAL_FERT_PLANT_SPEED;
+    const currentLevel = typeof level === 'number' ? level : 1;
+    const currentLands = typeof lands === 'number' ? lands : 1;
+    const plantSecNoFert = currentLands / NO_FERT_PLANT_SPEED;
+    const plantSecFert = currentLands / NORMAL_FERT_PLANT_SPEED;
     const rows = [];
 
     for (const s of seedsData) {
-      if (s.requiredLevel > level) continue;
+      if (s.requiredLevel > currentLevel) continue;
 
       const seedId = s.seedId;
       const growTimeSec = s.growTimeSec;
@@ -63,8 +65,8 @@ export default function App() {
       const cycleNoFert = growTimeSec + plantSecNoFert;
       const cycleFert = growTimeFert + plantSecFert;
 
-      const expPerHourNoFert = (lands * s.exp / cycleNoFert) * 3600;
-      const expPerHourFert = (lands * s.exp / cycleFert) * 3600;
+      const expPerHourNoFert = (currentLands * s.exp / cycleNoFert) * 3600;
+      const expPerHourFert = (currentLands * s.exp / cycleFert) * 3600;
       
       const gainPercent = expPerHourNoFert > 0
         ? ((expPerHourFert - expPerHourNoFert) / expPerHourNoFert) * 100
@@ -109,7 +111,7 @@ export default function App() {
               <input 
                 type="number" 
                 value={level} 
-                onChange={e => setLevel(Number(e.target.value))}
+                onChange={e => setLevel(e.target.value === '' ? '' : Number(e.target.value))}
                 className="w-full p-3 rounded-xl bg-[#f0e6d3] shadow-[inset_3px_3px_7px_rgba(163,141,109,0.25),inset_-3px_-3px_7px_rgba(250,243,230,0.5)] outline-none focus:ring-2 focus:ring-green-400"
                 min="1" max="100"
               />
@@ -119,7 +121,7 @@ export default function App() {
               <input 
                 type="number" 
                 value={lands} 
-                onChange={e => setLands(Number(e.target.value))}
+                onChange={e => setLands(e.target.value === '' ? '' : Number(e.target.value))}
                 className="w-full p-3 rounded-xl bg-[#f0e6d3] shadow-[inset_3px_3px_7px_rgba(163,141,109,0.25),inset_-3px_-3px_7px_rgba(250,243,230,0.5)] outline-none focus:ring-2 focus:ring-green-400"
                 min="1" max="200"
               />
