@@ -1,5 +1,5 @@
 {
-  "name": "",
-  "description": "",
+  "name": "QQfarm_up",
+  "description": "计算在不同作物周期下，一季或二季作物的经验最大化种植方案和金币最大化种植方案",
   "requestFramePermissions": []
 }
