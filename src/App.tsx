@@ -6,7 +6,8 @@ import seedMapping from './data/seed_mapping.json';
 
 const seedImageMap: Record<number, string> = {};
 const seedNameImageMap: Record<string, string> = {};
-for (const m of seedMapping) {
+const actualSeedMapping = Array.isArray(seedMapping) ? seedMapping : (seedMapping as any).rows || [];
+for (const m of actualSeedMapping) {
   const sid = Number(m.seedId);
   if (sid > 0 && m.fileName) {
     seedImageMap[sid] = m.fileName;
@@ -53,7 +54,8 @@ function parseGrowPhases(growPhases: string) {
 
 const plantPhaseMap: Record<number, number> = {};
 const plantLastPhaseMap: Record<number, number> = {};
-for (const p of plantData) {
+const actualPlantData = Array.isArray(plantData) ? plantData : (plantData as any).rows || [];
+for (const p of actualPlantData) {
   const seedId = Number(p.seed_id);
   if (seedId > 0 && !plantPhaseMap[seedId]) {
     const phases = parseGrowPhases(p.grow_phases);
@@ -97,7 +99,8 @@ export default function App() {
     const plantSecFert = currentLands / NORMAL_FERT_PLANT_SPEED;
     const rows = [];
 
-    for (const s of seedsData) {
+    const actualSeedsData = Array.isArray(seedsData) ? seedsData : (seedsData as any).rows || [];
+    for (const s of actualSeedsData) {
       if (s.requiredLevel > currentLevel) continue;
 
       const seedId = s.seedId;
