@@ -112,7 +112,10 @@ export default function App() {
           <h1 className="text-4xl font-black bg-gradient-to-r from-green-500 via-orange-500 to-purple-500 bg-clip-text text-transparent">
             QQ农场经验计算器
           </h1>
-          <p className="text-[#7a6555] text-lg">输入等级和土地数量，智能计算经验最大化的种植方案</p>
+          <p className="text-[#7a6555] text-base md:text-lg max-w-[280px] md:max-w-md mx-auto leading-relaxed">
+            输入等级和土地数量<br className="md:hidden" />
+            智能计算经验最大化的种植方案
+          </p>
         </div>
 
         <div className="bg-[#f7f0e4] rounded-3xl p-6 shadow-[6px_6px_14px_rgba(163,141,109,0.4),-4px_-4px_10px_rgba(250,243,230,0.65)]">
