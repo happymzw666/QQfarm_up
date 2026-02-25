@@ -1,7 +1,37 @@
+/// <reference types="vite/client" />
 import React, { useState, useMemo } from 'react';
 import seedsData from './data/seeds.json';
 import plantData from './data/Plant.json';
 import seedMapping from './data/seed_mapping.json';
+
+const seedImageMap: Record<number, string> = {};
+const seedNameImageMap: Record<string, string> = {};
+for (const m of seedMapping) {
+  const sid = Number(m.seedId);
+  if (sid > 0 && m.fileName) {
+    seedImageMap[sid] = m.fileName;
+  }
+  if (m.name && m.fileName && m.name !== '未知') {
+    seedNameImageMap[m.name] = m.fileName;
+  }
+}
+
+function CropImage({ seedId, name, size = 32, className = '' }: { seedId?: number, name: string, size?: number, className?: string }) {
+  const fileName = (seedId && seedImageMap[seedId]) || seedNameImageMap[name];
+  if (fileName) {
+    return (
+      <img 
+        src={`./seed_images_named/${fileName}`} 
+        alt={name} 
+        className={`inline-block align-middle object-contain rounded-md shrink-0 ${className}`} 
+        loading="lazy" 
+        style={{ width: size, height: size }} 
+        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+      />
+    );
+  }
+  return null;
+}
 
 const NO_FERT_PLANTS_PER_2_SEC = 18;
 const NORMAL_FERT_PLANTS_PER_2_SEC = 12;
@@ -52,51 +82,6 @@ const LAND_BUFFS = {
   gold: { time: 0.8, exp: 1.2 },
 };
 
-const cropEmojis: Record<string, string> = {
-    '白萝卜': '🥕', '胡萝卜': '🥕', '大白菜': '🥬', '大蒜': '🧄', '大葱': '🧅',
-    '水稻': '🌾', '小麦': '🌾', '玉米': '🌽', '鲜姜': '🫚', '土豆': '🥔',
-    '小白菜': '🥬', '生菜': '🥬', '油菜': '🌿', '茄子': '🍆', '红枣': '🫘',
-    '蒲公英': '🌼', '银莲花': '🌸', '番茄': '🍅', '花菜': '🥦', '韭菜': '🌿',
-    '小雏菊': '🌼', '豌豆': '🫛', '莲藕': '🪷', '红玫瑰': '🌹', '秋菊（黄色）': '🌻',
-    '满天星': '💫', '含羞草': '🌿', '牵牛花': '🌺', '秋菊（红色）': '🌺', '辣椒': '🌶️',
-    '黄瓜': '🥒', '芹菜': '🌿', '天香百合': '🌷', '南瓜': '🎃', '核桃': '🌰',
-    '山楂': '🍒', '菠菜': '🥬', '草莓': '🍓', '苹果': '🍎', '四叶草': '🍀',
-    '非洲菊': '🌼', '火绒草': '🌿', '花香根鸢尾': '💐', '虞美人': '🌺', '向日葵': '🌻',
-    '西瓜': '🍉', '黄豆': '🫘', '香蕉': '🍌', '竹笋': '🎋', '桃子': '🍑',
-    '甘蔗': '🎋', '橙子': '🍊', '茉莉花': '🌸', '葡萄': '🍇', '丝瓜': '🥒',
-    '榛子': '🌰', '迎春花': '🌼', '石榴': '🍎', '栗子': '🌰', '柚子': '🍊',
-    '蘑菇': '🍄', '菠萝': '🍍', '箬竹': '🎋', '无花果': '🫒', '椰子': '🥥',
-    '花生': '🥜', '金针菇': '🍄', '葫芦': '🫑', '猕猴桃': '🥝', '梨': '🍐',
-    '睡莲': '🪷', '火龙果': '🐉', '枇杷': '🍑', '樱桃': '🍒', '李子': '🫐',
-    '荔枝': '🍒', '香瓜': '🍈', '木瓜': '🥭', '桂圆': '🫐', '月柿': '🍊',
-    '杨桃': '⭐', '哈密瓜': '🍈', '桑葚': '🫐', '柠檬': '🍋', '芒果': '🥭',
-    '杨梅': '🫐', '榴莲': '🥭', '番石榴': '🍈', '瓶子树': '🌳', '蓝莓': '🫐',
-    '猪笼草': '🌿', '山竹': '🍑', '曼陀罗华': '🌸', '曼珠沙华': '🌺', '苦瓜': '🥒',
-    '天堂鸟': '🦜', '冬瓜': '🥒', '豹皮花': '🌺', '杏子': '🍑', '金桔': '🍊',
-};
-
-const getCropEmoji = (name: string) => cropEmojis[name] || '🌱';
-
-const CropImage = ({ seedId, name, className }: { seedId: number, name: string, className?: string }) => {
-  const [error, setError] = useState(false);
-  
-  if (error) {
-    return <span className={`flex items-center justify-center ${className}`} style={{ fontSize: '1.5em' }}>{getCropEmoji(name)}</span>;
-  }
-
-  const mapping = seedMapping.find(m => m.seedId === seedId) || seedMapping.find(m => m.name === name);
-  const fileName = mapping ? mapping.fileName : `${seedId}_${name}_Crop_3_Seed.png`;
-  
-  return (
-    <img 
-      src={`/${encodeURIComponent(fileName)}`} 
-      alt={name} 
-      className={className}
-      onError={() => setError(true)}
-    />
-  );
-};
-
 export default function App() {
   const [level, setLevel] = useState<number | ''>(70);
   const [lands, setLands] = useState<number | ''>(24);
@@ -112,8 +97,7 @@ export default function App() {
     const plantSecFert = currentLands / NORMAL_FERT_PLANT_SPEED;
     const rows = [];
 
-    const seedsList = Array.isArray(seedsData) ? seedsData : (seedsData.rows || []);
-    for (const s of seedsList) {
+    for (const s of seedsData) {
       if (s.requiredLevel > currentLevel) continue;
 
       const seedId = s.seedId;
@@ -239,15 +223,9 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-gradient-to-br from-[#e8f5e9] to-[#f1f8e9] rounded-3xl p-6 shadow-lg text-center">
               <h3 className="text-lg font-bold mb-4">不施肥推荐</h3>
-              <div className="flex items-center justify-center gap-3 mb-6">
-                {bestNo?.name && (
-                  <CropImage 
-                    seedId={bestNo.seedId}
-                    name={bestNo.name}
-                    className="w-12 h-12 object-contain drop-shadow-md"
-                  />
-                )}
-                <div className="text-2xl font-black">{bestNo?.name}</div>
+              <div className="text-2xl font-black mb-6 flex items-center justify-center gap-2">
+                <CropImage seedId={bestNo?.seedId} name={bestNo?.name || ''} size={36} />
+                {bestNo?.name}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white/50 p-3 rounded-xl shadow-sm">
@@ -272,15 +250,9 @@ export default function App() {
             {useFert && (
               <div className="bg-gradient-to-br from-[#fff3e0] to-[#fce4ec] rounded-3xl p-6 shadow-lg text-center">
                 <h3 className="text-lg font-bold mb-4">施肥推荐</h3>
-                <div className="flex items-center justify-center gap-3 mb-6">
-                  {bestFert?.name && (
-                    <CropImage 
-                      seedId={bestFert.seedId}
-                      name={bestFert.name}
-                      className="w-12 h-12 object-contain drop-shadow-md"
-                    />
-                  )}
-                  <div className="text-2xl font-black">{bestFert?.name}</div>
+                <div className="text-2xl font-black mb-6 flex items-center justify-center gap-2">
+                  <CropImage seedId={bestFert?.seedId} name={bestFert?.name || ''} size={36} />
+                  {bestFert?.name}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/50 p-3 rounded-xl shadow-sm">
@@ -327,13 +299,9 @@ export default function App() {
                       {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
                     </td>
                     <td className="p-2 md:p-3 font-bold whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <CropImage 
-                          seedId={row.seedId}
-                          name={row.name}
-                          className="w-6 h-6 object-contain"
-                        />
-                        <span>{row.name}</span>
+                      <div className="flex items-center gap-1.5">
+                        <CropImage seedId={row.seedId} name={row.name} size={24} />
+                        {row.name}
                       </div>
                     </td>
                     <td className="p-2 md:p-3 text-gray-600 whitespace-nowrap">Lv {row.requiredLevel}</td>
