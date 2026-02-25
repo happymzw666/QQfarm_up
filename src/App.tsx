@@ -89,7 +89,7 @@ const CropImage = ({ seedId, name, className }: { seedId: number, name: string, 
   
   return (
     <img 
-      src={`/${encodeURIComponent(fileName)}`} 
+      src={`/${fileName}`} 
       alt={name} 
       className={className}
       onError={() => setError(true)}
@@ -112,7 +112,8 @@ export default function App() {
     const plantSecFert = currentLands / NORMAL_FERT_PLANT_SPEED;
     const rows = [];
 
-    for (const s of seedsData) {
+    const seedsList = Array.isArray(seedsData) ? seedsData : (seedsData.rows || []);
+    for (const s of seedsList) {
       if (s.requiredLevel > currentLevel) continue;
 
       const seedId = s.seedId;
