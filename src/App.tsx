@@ -89,7 +89,7 @@ const CropImage = ({ seedId, name, className }: { seedId: number, name: string, 
   
   return (
     <img 
-      src={`/${fileName}`} 
+      src={`/${encodeURIComponent(fileName)}`} 
       alt={name} 
       className={className}
       onError={() => setError(true)}
