@@ -97,6 +97,7 @@ export default function App() {
   const [level, setLevel] = useState<number | ''>(70);
   const [lands, setLands] = useState<number | ''>(24);
   const [useFert, setUseFert] = useState(true);
+  const [target, setTarget] = useState<'exp' | 'gold'>('exp');
 
   const calculatedRows = useMemo(() => {
     const currentLevel = typeof level === 'number' ? level : 1;
@@ -125,9 +126,13 @@ export default function App() {
       const cycleFert = totalGrowTimeFert + plantSecFert;
 
       const totalExp = s.exp * seasons;
+      const totalGold = s.price * seasons;
 
       const expPerHourNoFert = (currentLands * totalExp / cycleNoFert) * 3600;
       const expPerHourFert = (currentLands * totalExp / cycleFert) * 3600;
+      
+      const goldPerHourNoFert = (currentLands * totalGold / cycleNoFert) * 3600;
+      const goldPerHourFert = (currentLands * totalGold / cycleFert) * 3600;
       
       const gainPercent = expPerHourNoFert > 0
         ? ((expPerHourFert - expPerHourNoFert) / expPerHourNoFert) * 100
@@ -145,6 +150,10 @@ export default function App() {
         expPerHourFert,
         expPerDayNoFert: expPerHourNoFert * 24,
         expPerDayFert: expPerHourFert * 24,
+        goldPerHourNoFert,
+        goldPerHourFert,
+        goldPerDayNoFert: goldPerHourNoFert * 24,
+        goldPerDayFert: goldPerHourFert * 24,
         gainPercent
       });
     }
@@ -152,8 +161,12 @@ export default function App() {
     return rows;
   }, [level, lands, useFert]);
 
-  const sortedNoFert = [...calculatedRows].sort((a, b) => b.expPerHourNoFert - a.expPerHourNoFert);
-  const sortedFert = [...calculatedRows].sort((a, b) => b.expPerHourFert - a.expPerHourFert);
+  const sortedNoFert = [...calculatedRows].sort((a, b) => 
+    target === 'exp' ? b.expPerHourNoFert - a.expPerHourNoFert : b.goldPerHourNoFert - a.goldPerHourNoFert
+  );
+  const sortedFert = [...calculatedRows].sort((a, b) => 
+    target === 'exp' ? b.expPerHourFert - a.expPerHourFert : b.goldPerHourFert - a.goldPerHourFert
+  );
 
   const bestNo = sortedNoFert[0];
   const bestFert = sortedFert[0];
@@ -163,17 +176,17 @@ export default function App() {
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-black bg-gradient-to-r from-green-500 via-orange-500 to-purple-500 bg-clip-text text-transparent">
-            QQ农场经验计算器
+            QQ农场收益计算器
           </h1>
           <p className="text-[#7a6555] text-base md:text-lg max-w-[280px] md:max-w-md mx-auto leading-relaxed">
             输入等级和土地数量<br className="md:hidden" />
-            智能计算经验最大化的种植方案
+            智能计算收益最大化的种植方案
           </p>
         </div>
 
         <div className="bg-[#f7f0e4] rounded-3xl p-6 shadow-[6px_6px_14px_rgba(163,141,109,0.4),-4px_-4px_10px_rgba(250,243,230,0.65)]">
           <h2 className="text-xl font-bold flex items-center gap-2 mb-6"><span>📝</span> 输入参数</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <div>
               <label className="block font-bold mb-2 text-[#5a4535]">🎯 账号等级</label>
               <input 
@@ -195,8 +208,25 @@ export default function App() {
               />
             </div>
             <div>
+              <label className="block font-bold mb-2 text-[#5a4535]">🎯 优化目标</label>
+              <div className="flex bg-[#f0e6d3] p-1 rounded-xl shadow-[inset_3px_3px_7px_rgba(163,141,109,0.25),inset_-3px_-3px_7px_rgba(250,243,230,0.5)] h-[48px]">
+                <button
+                  onClick={() => setTarget('exp')}
+                  className={`flex-1 text-sm font-bold rounded-lg transition-all ${target === 'exp' ? 'bg-green-500 text-white shadow-md' : 'text-[#7a6555] hover:bg-white/30'}`}
+                >
+                  经验最大
+                </button>
+                <button
+                  onClick={() => setTarget('gold')}
+                  className={`flex-1 text-sm font-bold rounded-lg transition-all ${target === 'gold' ? 'bg-orange-500 text-white shadow-md' : 'text-[#7a6555] hover:bg-white/30'}`}
+                >
+                  金币最大
+                </button>
+              </div>
+            </div>
+            <div>
               <label className="block font-bold mb-2 text-[#5a4535]">🧪 使用技能</label>
-              <label className="flex items-center space-x-3 cursor-pointer mt-2 p-3 rounded-xl bg-[#f0e6d3] shadow-[3px_3px_7px_rgba(163,141,109,0.2),-3px_-3px_7px_rgba(250,243,230,0.5)] hover:shadow-[inset_2px_2px_5px_rgba(163,141,109,0.2),inset_-2px_-2px_5px_rgba(250,243,230,0.5)] transition-all">
+              <label className="flex items-center space-x-3 cursor-pointer p-3 rounded-xl bg-[#f0e6d3] shadow-[3px_3px_7px_rgba(163,141,109,0.2),-3px_-3px_7px_rgba(250,243,230,0.5)] hover:shadow-[inset_2px_2px_5px_rgba(163,141,109,0.2),inset_-2px_-2px_5px_rgba(250,243,230,0.5)] transition-all h-[48px]">
                 <input 
                   type="checkbox" 
                   checked={useFert} 
@@ -241,12 +271,12 @@ export default function App() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white/50 p-3 rounded-xl shadow-sm">
-                  <div className="text-xs text-gray-500 mb-1">每小时经验</div>
-                  <div className="font-bold text-lg">{bestNo?.expPerHourNoFert.toFixed(2)}</div>
+                  <div className="text-xs text-gray-500 mb-1">{target === 'exp' ? '每小时经验' : '每小时金币'}</div>
+                  <div className="font-bold text-lg">{target === 'exp' ? bestNo?.expPerHourNoFert.toFixed(2) : bestNo?.goldPerHourNoFert.toFixed(2)}</div>
                 </div>
                 <div className="bg-white/50 p-3 rounded-xl shadow-sm">
-                  <div className="text-xs text-gray-500 mb-1">每日经验</div>
-                  <div className="font-bold text-lg">{Math.round(bestNo?.expPerDayNoFert || 0).toLocaleString()}</div>
+                  <div className="text-xs text-gray-500 mb-1">{target === 'exp' ? '每日经验' : '每日金币'}</div>
+                  <div className="font-bold text-lg">{Math.round(target === 'exp' ? bestNo?.expPerDayNoFert || 0 : bestNo?.goldPerDayNoFert || 0).toLocaleString()}</div>
                 </div>
                 <div className="bg-white/50 p-3 rounded-xl shadow-sm flex flex-col justify-center overflow-hidden">
                   <div className="text-xs text-gray-500 mb-1">生长时间</div>
@@ -268,12 +298,12 @@ export default function App() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/50 p-3 rounded-xl shadow-sm">
-                    <div className="text-xs text-gray-500 mb-1">每小时经验</div>
-                    <div className="font-bold text-lg">{bestFert?.expPerHourFert.toFixed(2)}</div>
+                    <div className="text-xs text-gray-500 mb-1">{target === 'exp' ? '每小时经验' : '每小时金币'}</div>
+                    <div className="font-bold text-lg">{target === 'exp' ? bestFert?.expPerHourFert.toFixed(2) : bestFert?.goldPerHourFert.toFixed(2)}</div>
                   </div>
                   <div className="bg-white/50 p-3 rounded-xl shadow-sm">
-                    <div className="text-xs text-gray-500 mb-1">每日经验</div>
-                    <div className="font-bold text-lg">{Math.round(bestFert?.expPerDayFert || 0).toLocaleString()}</div>
+                    <div className="text-xs text-gray-500 mb-1">{target === 'exp' ? '每日经验' : '每日金币'}</div>
+                    <div className="font-bold text-lg">{Math.round(target === 'exp' ? bestFert?.expPerDayFert || 0 : bestFert?.goldPerDayFert || 0).toLocaleString()}</div>
                   </div>
                   <div className="bg-white/50 p-3 rounded-xl shadow-sm flex flex-col justify-center overflow-hidden">
                     <div className="text-xs text-gray-500 mb-1">肥后生长</div>
@@ -291,7 +321,7 @@ export default function App() {
 
         <div className="bg-[#f7f0e4] rounded-3xl p-4 md:p-6 shadow-[6px_6px_14px_rgba(163,141,109,0.4),-4px_-4px_10px_rgba(250,243,230,0.65)]">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-2">
-            <h2 className="text-xl font-bold">🏆 经验排行榜 (Top 20)</h2>
+            <h2 className="text-xl font-bold">🏆 {target === 'exp' ? '经验排行榜' : '金币排行榜'} (Top 20)</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[400px]">
@@ -301,7 +331,7 @@ export default function App() {
                   <th className="p-2 md:p-3 whitespace-nowrap">作物</th>
                   <th className="p-2 md:p-3 whitespace-nowrap">等级</th>
                   <th className="p-2 md:p-3 whitespace-nowrap">生长时间</th>
-                  <th className="p-2 md:p-3 rounded-tr-xl whitespace-nowrap">每小时经验</th>
+                  <th className="p-2 md:p-3 rounded-tr-xl whitespace-nowrap">{target === 'exp' ? '每小时经验' : '每小时金币'}</th>
                 </tr>
               </thead>
               <tbody className="text-sm md:text-base">
@@ -319,7 +349,10 @@ export default function App() {
                     <td className="p-2 md:p-3 text-gray-600 whitespace-nowrap">Lv {row.requiredLevel}</td>
                     <td className="p-2 md:p-3 text-gray-600 text-sm md:text-base whitespace-nowrap">{useFert ? row.growTimeFertStr : row.growTimeStr}</td>
                     <td className="p-2 md:p-3 font-bold text-green-700 whitespace-nowrap">
-                      {(useFert ? row.expPerHourFert : row.expPerHourNoFert).toFixed(2)}
+                      {target === 'exp' 
+                        ? (useFert ? row.expPerHourFert : row.expPerHourNoFert).toFixed(2)
+                        : (useFert ? row.goldPerHourFert : row.goldPerHourNoFert).toFixed(2)
+                      }
                     </td>
                   </tr>
                 ))}
