@@ -6,8 +6,7 @@ import seedMapping from './data/seed_mapping.json';
 
 const seedImageMap: Record<number, string> = {};
 const seedNameImageMap: Record<string, string> = {};
-const actualSeedMapping = Array.isArray(seedMapping) ? seedMapping : (seedMapping as any).rows || [];
-for (const m of actualSeedMapping) {
+for (const m of seedMapping) {
   const sid = Number(m.seedId);
   if (sid > 0 && m.fileName) {
     seedImageMap[sid] = m.fileName;
@@ -20,14 +19,25 @@ for (const m of actualSeedMapping) {
 function CropImage({ seedId, name, size = 32, className = '' }: { seedId?: number, name: string, size?: number, className?: string }) {
   const fileName = (seedId && seedImageMap[seedId]) || seedNameImageMap[name];
   if (fileName) {
+    // Try to use the safe filename without Chinese characters if possible
+    // e.g. "20001_草莓_Crop_1_Seed.png" -> "20001_Crop_1_Seed.png"
+    const safeFileName = fileName.replace(/_[^_]+_Crop_/, '_Crop_');
+    
     return (
       <img 
-        src={`./seed_images_named/${fileName}`} 
+        src={`/${encodeURIComponent(safeFileName)}`} 
         alt={name} 
         className={`inline-block align-middle object-contain rounded-md shrink-0 ${className}`} 
         loading="lazy" 
         style={{ width: size, height: size }} 
-        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+        onError={(e) => { 
+          // If safe filename fails, try the original filename URL-encoded
+          if (!e.currentTarget.src.includes('seed_images_named')) {
+            e.currentTarget.src = `/seed_images_named/${encodeURIComponent(fileName)}`;
+          } else {
+            e.currentTarget.style.display = 'none'; 
+          }
+        }}
       />
     );
   }
@@ -54,8 +64,7 @@ function parseGrowPhases(growPhases: string) {
 
 const plantPhaseMap: Record<number, number> = {};
 const plantLastPhaseMap: Record<number, number> = {};
-const actualPlantData = Array.isArray(plantData) ? plantData : (plantData as any).rows || [];
-for (const p of actualPlantData) {
+for (const p of plantData) {
   const seedId = Number(p.seed_id);
   if (seedId > 0 && !plantPhaseMap[seedId]) {
     const phases = parseGrowPhases(p.grow_phases);
@@ -98,9 +107,9 @@ export default function App() {
     const plantSecNoFert = currentLands / NO_FERT_PLANT_SPEED;
     const plantSecFert = currentLands / NORMAL_FERT_PLANT_SPEED;
     const rows = [];
+    const seedsList = Array.isArray(seedsData) ? seedsData : (seedsData.rows || []);
 
-    const actualSeedsData = Array.isArray(seedsData) ? seedsData : (seedsData as any).rows || [];
-    for (const s of actualSeedsData) {
+    for (const s of seedsList) {
       if (s.requiredLevel > currentLevel) continue;
 
       const seedId = s.seedId;
