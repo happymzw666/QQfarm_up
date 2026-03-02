@@ -19,23 +19,22 @@ for (const m of seedMapping) {
 function CropImage({ seedId, name, size = 32, className = '' }: { seedId?: number, name: string, size?: number, className?: string }) {
   const fileName = (seedId && seedImageMap[seedId]) || seedNameImageMap[name];
   if (fileName) {
-    // Try to use the safe filename without Chinese characters if possible
-    // e.g. "20001_草莓_Crop_1_Seed.png" -> "20001_Crop_1_Seed.png"
-    const safeFileName = fileName.replace(/_[^_]+_Crop_/, '_Crop_');
-    
+    const baseUrl = import.meta.env.BASE_URL || '/';
+    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
+
     return (
-      <img 
-        src={`/${encodeURIComponent(safeFileName)}`} 
-        alt={name} 
-        className={`inline-block align-middle object-contain rounded-md shrink-0 ${className}`} 
-        loading="lazy" 
-        style={{ width: size, height: size }} 
-        onError={(e) => { 
-          // If safe filename fails, try the original filename URL-encoded
+      <img
+        src={`${cleanBaseUrl}${encodeURIComponent(fileName)}`}
+        alt={name}
+        className={`inline-block align-middle object-contain rounded-md shrink-0 ${className}`}
+        loading="lazy"
+        style={{ width: size, height: size }}
+        onError={(e) => {
+          // If original filename fails, try seed_images_named folder
           if (!e.currentTarget.src.includes('seed_images_named')) {
-            e.currentTarget.src = `/seed_images_named/${encodeURIComponent(fileName)}`;
+            e.currentTarget.src = `${cleanBaseUrl}seed_images_named/${encodeURIComponent(fileName)}`;
           } else {
-            e.currentTarget.style.display = 'none'; 
+            e.currentTarget.style.display = 'none';
           }
         }}
       />
@@ -102,7 +101,7 @@ export default function App() {
   const calculatedRows = useMemo(() => {
     const currentLevel = typeof level === 'number' ? level : 1;
     const currentLands = typeof lands === 'number' ? lands : 1;
-    
+
     if (currentLands === 0) return [];
 
     const plantSecNoFert = currentLands / NO_FERT_PLANT_SPEED;
@@ -130,10 +129,10 @@ export default function App() {
 
       const expPerHourNoFert = (currentLands * totalExp / cycleNoFert) * 3600;
       const expPerHourFert = (currentLands * totalExp / cycleFert) * 3600;
-      
+
       const goldPerHourNoFert = (currentLands * totalGold / cycleNoFert) * 3600;
       const goldPerHourFert = (currentLands * totalGold / cycleFert) * 3600;
-      
+
       const gainPercent = expPerHourNoFert > 0
         ? ((expPerHourFert - expPerHourNoFert) / expPerHourNoFert) * 100
         : 0;
@@ -161,10 +160,10 @@ export default function App() {
     return rows;
   }, [level, lands, useFert]);
 
-  const sortedNoFert = [...calculatedRows].sort((a, b) => 
+  const sortedNoFert = [...calculatedRows].sort((a, b) =>
     target === 'exp' ? b.expPerHourNoFert - a.expPerHourNoFert : b.goldPerHourNoFert - a.goldPerHourNoFert
   );
-  const sortedFert = [...calculatedRows].sort((a, b) => 
+  const sortedFert = [...calculatedRows].sort((a, b) =>
     target === 'exp' ? b.expPerHourFert - a.expPerHourFert : b.goldPerHourFert - a.goldPerHourFert
   );
 
@@ -189,9 +188,9 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <div>
               <label className="block font-bold mb-2 text-[#5a4535]">🎯 账号等级</label>
-              <input 
-                type="number" 
-                value={level} 
+              <input
+                type="number"
+                value={level}
                 onChange={e => setLevel(e.target.value === '' ? '' : Number(e.target.value))}
                 className="w-full p-3 rounded-xl bg-[#f0e6d3] shadow-[inset_3px_3px_7px_rgba(163,141,109,0.25),inset_-3px_-3px_7px_rgba(250,243,230,0.5)] outline-none focus:ring-2 focus:ring-green-400 transition-all"
                 min="1" max="100"
@@ -199,9 +198,9 @@ export default function App() {
             </div>
             <div>
               <label className="block font-bold mb-2 text-[#5a4535]">🏡 土地数量</label>
-              <input 
-                type="number" 
-                value={lands} 
+              <input
+                type="number"
+                value={lands}
                 onChange={e => setLands(e.target.value === '' ? '' : Number(e.target.value))}
                 className="w-full p-3 rounded-xl bg-[#f0e6d3] shadow-[inset_3px_3px_7px_rgba(163,141,109,0.25),inset_-3px_-3px_7px_rgba(250,243,230,0.5)] outline-none focus:ring-2 focus:ring-green-400 transition-all"
                 min="1" max="200"
@@ -227,9 +226,9 @@ export default function App() {
             <div>
               <label className="block font-bold mb-2 text-[#5a4535]">🧪 使用技能</label>
               <label className="flex items-center space-x-3 cursor-pointer p-3 rounded-xl bg-[#f0e6d3] shadow-[3px_3px_7px_rgba(163,141,109,0.2),-3px_-3px_7px_rgba(250,243,230,0.5)] hover:shadow-[inset_2px_2px_5px_rgba(163,141,109,0.2),inset_-2px_-2px_5px_rgba(250,243,230,0.5)] transition-all h-[48px]">
-                <input 
-                  type="checkbox" 
-                  checked={useFert} 
+                <input
+                  type="checkbox"
+                  checked={useFert}
                   onChange={e => setUseFert(e.target.checked)}
                   className="w-5 h-5 text-green-500 rounded focus:ring-green-400"
                 />
@@ -349,7 +348,7 @@ export default function App() {
                     <td className="p-2 md:p-3 text-gray-600 whitespace-nowrap">Lv {row.requiredLevel}</td>
                     <td className="p-2 md:p-3 text-gray-600 text-sm md:text-base whitespace-nowrap">{useFert ? row.growTimeFertStr : row.growTimeStr}</td>
                     <td className="p-2 md:p-3 font-bold text-green-700 whitespace-nowrap">
-                      {target === 'exp' 
+                      {target === 'exp'
                         ? (useFert ? row.expPerHourFert : row.expPerHourNoFert).toFixed(2)
                         : (useFert ? row.goldPerHourFert : row.goldPerHourNoFert).toFixed(2)
                       }
